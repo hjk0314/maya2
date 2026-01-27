@@ -3387,3 +3387,34 @@ def delete_key(
             cmds.setAttr(f"{object}.{attr}", defaults)
 
 
+
+@with_selection
+def get_normal_vector(*vertices: str) -> List[List[float]]:
+    """ Get the normal vector (XYZ) for one or more mesh vertices. Connect the (0, 0, 0) and this normal vector, it becomes a unit vector.
+
+    Args
+    ----
+        *vertices (str): "pSphere1.vtx[0]"
+
+    Notes
+    -----
+        **Decoration**
+            - @with_selection
+
+    Examples
+    --------
+    >>> get_normal_vector("pSphere1.vtx[0]", "pSphere1.vtx[1]")
+    [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0]]
+    """
+    result = []
+    for vtx in vertices:
+        normal_vector_raw_data = cmds.polyNormalPerVertex(vtx, query=True, xyz=True)
+        if not normal_vector_raw_data:
+            cmds.warning(f"Could not get normal information for {vtx}")
+            continue
+        normal_vector = [math.floor(v * 100000) / 100000 for v in normal_vector_raw_data[0:3]]
+        result.append(normal_vector)
+    return result
+
+
+

@@ -1,0 +1,29 @@
+{
+    "files.encoding": "utf8",
+    // "python.pythonPath": "C:\\Python37\\python.exe",
+    "python.autoComplete.extraPaths": [
+        "C:\\Python37\\Lib\\site-packages",
+        "C:\\Program Files\\Autodesk\\Maya2022\\Python37\\Lib\\site-packages", 
+        "C:\\Program Files\\Autodesk\\Maya2025\\Python\\Lib\\site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "C:\\Python37\\Lib\\site-packages", 
+        "C:\\Program Files\\Autodesk\\Maya2022\\Python37\\Lib\\site-packages", 
+        "C:\\Program Files\\Autodesk\\Maya2025\\Python\\Lib\\site-packages"
+    ], 
+    "[python]": {
+        // "editor.defaultFormatter": "ms-python.autopep8", 
+        "editor.defaultFormatter": "charliermarsh.ruff", 
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "never", 
+        "source.organizeImports": "never", 
+        "source.fixAll.ruff": "never", 
+        "source.organizeImports.ruff": "never"
+    },
+    "cursorpyright.analysis.extraPaths": [
+        "C:\\Python37\\Lib\\site-packages",
+        "C:\\Program Files\\Autodesk\\Maya2022\\Python37\\Lib\\site-packages", 
+        "C:\\Program Files\\Autodesk\\Maya2025\\Python\\Lib\\site-packages"
+    ]
+}

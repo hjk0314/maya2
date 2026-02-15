@@ -12,15 +12,64 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 
 
-__version__ = "Python 3.7.9"
+__version__ = "Python 3.7.7"
 __author__ = "HONG JINKI <hjk0314@gmail.com>"
 __all__ = [
-    'with_selection', 
-    'alias', 
-    'compare_execution_time', 
-
-    'get_position', 
-]
+    "add_affixes",
+    "align_object_to_plane",
+    "colorize",
+    "ColorPickerUI",
+    "compare_execution_time",
+    "copy_key",
+    "create_annotation",
+    "create_attributes",
+    "create_attributes_proxy",
+    "create_blendColor_node",
+    "create_curve_aim",
+    "create_curve_animation",
+    "create_curve_from_points",
+    "create_curve_ikSpline",
+    "create_follicle",
+    "create_FK_ctrls",
+    "create_group_for_rig",
+    "create_ikSplineHandle",
+    "create_joint_IKFK",
+    "create_joint_on_curve_path",
+    "create_keyed_animCurve",
+    "create_pole_vector_joints",
+    "create_setRange_node",
+    "delete_key",
+    "extract_range_path",
+    "get_bounding_box_position",
+    "get_bounding_box_size",
+    "get_closest_point_on_mesh",
+    "get_connected_nodes",
+    "get_constraint_weight_by_distance",
+    "get_curve_cv_count",
+    "get_deformed_shape",
+    "get_distance",
+    "get_flatten_list",
+    "get_normal_vector",
+    "get_orient_joint_direction",
+    "get_parents_children",
+    "get_pointOnCurve_parameter",
+    "get_position",
+    "get_range_path",
+    "get_referenced_list",
+    "get_uv_coordinates",
+    "get_uv_coordinates_closet_object",
+    "group_with_pivot",
+    "offset_keyframes",
+    "orient_joint",
+    "parent_in_sequence",
+    "re_name",
+    "replace_name",
+    "restore_range_path",
+    "select_only",
+    "set_joint_style",
+    "set_rotate_order",
+    "split_numbers",
+    ]
 
 
 class Data:
@@ -2434,19 +2483,18 @@ def create_attributes(
 
 
 
-@alias(sc="source_ctrl", tc="target_ctrl", an="attr_name", k="keyable", 
-       ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
+@alias(an="attr_name", k="keyable", ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
 def create_attributes_proxy(
-    source_ctrl: str, 
-    target_ctrl: str, 
-    attr_name: str, 
+    *nodes,
+    attr_name: str,
     keyable: bool = True,
     float_type: dict = None,
     bool_type: dict = None,
     enum_type: dict = None,
     integer_type: dict = None,
-) -> dict:
-    """ Creates proxy attributes on a given controller.
+) -> list:
+    """
+    Creates chained proxy attributes through all provided nodes.
 
     Notes
     -----
@@ -2455,8 +2503,8 @@ def create_attributes_proxy(
 
     Args
     ----
-        source_ctrl : str
-        target_ctrl : str
+        *nodes : str
+            Sequence of Maya nodes to chain proxy attributes.
         attr_name : str
         keyable : bool
         float_type : dict
@@ -2476,37 +2524,44 @@ def create_attributes_proxy(
     >>> et_dict = {"at": "enum", "enumName": "World:Hips:Chest"}
     >>> it_dict = {"at": "long", "dv": 0}
     ...
-    >>> create_attributes_proxy(ctrl_1, ctrl_2, attr, ft=ft_dict)
-    >>> create_attributes_proxy(ctrl_2, ctrl_2, attr, bt=bt_dict)
-    >>> create_attributes_proxy(ctrl_2, ctrl_2, attr, et=et_dict)
-    >>> create_attributes_proxy(ctrl_2, ctrl_2, attr, it=it_dict)
+    >>> create_attributes_proxy(ctrl_1, ctrl_2, an=attr, ft=ft_dict)
+    >>> create_attributes_proxy(ctrl_2, ctrl_2, an=attr, bt=bt_dict)
+    >>> create_attributes_proxy(ctrl_2, ctrl_2, an=attr, et=et_dict)
+    >>> create_attributes_proxy(ctrl_2, ctrl_2, an=attr, it=it_dict)
     """
-    kwargs = {
+    base_kwargs = {
         "longName": attr_name,
         "keyable": keyable,
     }
 
-
+    proxy_kwargs_list = []
     if float_type:
-        kwargs.update(float_type)
+        base_kwargs.update(float_type)
     elif bool_type:
-        kwargs.update(bool_type)
+        base_kwargs.update(bool_type)
     elif enum_type:
-        kwargs.update(enum_type)
+        base_kwargs.update(enum_type)
     elif integer_type:
-        kwargs.update(integer_type)
+        base_kwargs.update(integer_type)
 
+    # Ensure the first node has the attribute (as a regular, not as a proxy)
+    first = nodes[0]
+    if not cmds.attributeQuery(attr_name, node=first, ex=True):
+        if cmds.attributeQuery(attr_name, node=first, exists=True):
+            cmds.deleteAttr(f"{first}.{attr_name}")
+        cmds.addAttr(first, **base_kwargs)
 
-    if not cmds.attributeQuery(attr_name, node=source_ctrl, ex=True):
-        cmds.addAttr(source_ctrl, **kwargs)
-
-
-    kwargs["proxy"] = "%s.%s" % (source_ctrl, attr_name)
-    if cmds.attributeQuery(attr_name, node=target_ctrl, ex=True):
-        cmds.deleteAttr(f"{target_ctrl}.{attr_name}")
-    cmds.addAttr(target_ctrl, **kwargs)
-
-    return kwargs
+    # Now, for each link in the chain, create proxy attribute on the next node
+    for i in range(1, len(nodes)):
+        source = nodes[i - 1]
+        target = nodes[i]
+        kwargs = dict(base_kwargs)  # fresh dict for each node
+        kwargs["proxy"] = f"{source}.{attr_name}"
+        if cmds.attributeQuery(attr_name, node=target, ex=True):
+            cmds.deleteAttr(f"{target}.{attr_name}")
+        cmds.addAttr(target, **kwargs)
+        proxy_kwargs_list.append(kwargs)
+    return proxy_kwargs_list
 
 
 

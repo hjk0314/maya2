@@ -625,6 +625,7 @@ def get_position(*args: str) -> List[Tuple]:
     return results
 
 
+
 @with_selection
 def get_bounding_box_position(*args) -> Tuple[float]:
     """ Get the coordinates of the center pivot of the boundingBox.
@@ -1745,7 +1746,7 @@ def add_affixes(*args, prefix: str = "", suffix: str = "") -> list:
 
 @alias(n="name", p="prefix", s="suffix")
 @with_selection
-def re_name(*args, name: str="", prefix: str="", suffix: str=""):
+def re_name(*args, name: str="", prefix: str="", suffix: str="") -> None:
     """ This function changes a name. 
     
     - Duplicate names are allowed. 
@@ -1787,7 +1788,10 @@ def re_name(*args, name: str="", prefix: str="", suffix: str=""):
             name_slice_copy[number_idx] = f"%0{len(num)}d" % (int(num)+idx)
             new = "".join(name_slice_copy.values())
         else:
-            new = name + "%s" % idx if name else org.split("|")[-1]
+            if name:
+                new = name if idx == 0 else name + str(idx)
+            else:
+                new = org.split("|")[-1]
         org_name[org] = cmds.ls(org, long=True)[0]
         new_name.append(new)
 

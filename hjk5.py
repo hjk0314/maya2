@@ -3482,3 +3482,67 @@ def re_name(*args, name: str="", prefix: str="", suffix: str="") -> None:
 
 
 
+def match_outliner_order(source_group_name: str, target_group_name: str) -> int:
+    """ The outliner sorting order of the target group is matched with the source group.
+
+    - Duplicate names are allowed. 
+    - You can add a ``prefix`` and ``suffix`` to a name. 
+    - Rename in the order you select.
+    - Process in the reverse order of selection.
+
+    Notes
+    -----
+        **No Decoration**
+
+
+    Args
+    ----
+        - source_group_name(str) : Lookdev group
+        - target_group_name(str) : Alembic group
+
+        
+    Examples
+    --------
+    >>> match_outliner_order('lookdev_curve_grp', 'imported_alembic_curves')
+    Matched the outliner order of **14** nodes.
+    """
+    source_full_path = cmds.ls(source_group_name, long=True)
+    target_full_path = cmds.ls(target_group_name, long=True)
+    
+
+    if not source_full_path or not target_full_path:
+        print("Source or target group could not be found.")
+        return
+
+
+    src_root = source_full_path[0]
+    tgt_root = target_full_path[0]
+    
+    
+    queue = [(src_root, tgt_root)]
+    reorder_count = 0
+    while queue:
+        curr_src_parent, _ = queue.pop(0)
+        src_children = cmds.listRelatives(curr_src_parent, c=True, f=True) or []
+        src_children = [c for c in src_children if not cmds.ls(c, shapes=True)]
+
+
+        for src_child in src_children:
+            tgt_child = src_child.replace(src_root, tgt_root, 1)
+            if cmds.objExists(tgt_child):
+                cmds.reorder(tgt_child, back=True)
+                reorder_count += 1
+                queue.append((src_child, tgt_child))
+
+
+    if reorder_count > 0:
+        print(f"Matched the outliner order of {reorder_count} nodes.")
+    else:
+        print("There is no matching order.")
+
+
+    return reorder_count
+
+
+
+
